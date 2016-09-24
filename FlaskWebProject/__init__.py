@@ -5,9 +5,12 @@ The flask application package.
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import validates
 
 Base = declarative_base()
 app = Flask(__name__)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 class Password(db.TypeDecorator):
@@ -34,20 +37,26 @@ class Password(db.TypeDecorator):
         elif value is not None:
             raise TypeError('Cannot convert {} to a PasswordHash'.format(type(value)))
 
-class MAC_IDs(Base):
-    __tablename__ = 'macids'
-    id = db.Column(db.Integer, primary_key = True)
-    macid = db.Column(db.String(128), unique = True)
-
 class User(Base):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key = True)
-    username = db.Column(db.String(80), unique = True)
-    password = db.Column(Password)
-
+    username = db.Column('username', db.String(80), unique = True)
+    password = db.Column('password', Password)
+    @validates('password')
     def _validate_password(self, key, pwd):
         return getattr(type(self), key).type.validator(pwd)
+    macids = db.Column('macids', ARRAY(db.String(128)))
+
+class Reminder(Base):
+    __tablename__ = 'reminders'
+
+    id = db.Column(db.Integer, primary_key = True)
+    userTrigger = db.relationship('User', backref= 'reminders', lazy='dynamic', uselist = False)
+    userReceiver = db.relationship('User', backref= 'reminders', lazy='dynamic', uselist = False)
+    reminderText = db.Column('message', db.Text)
+    time = db.Column('time', db.DateTime, primary_key = True)
+
 
 
 
