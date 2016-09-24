@@ -17,7 +17,7 @@ def create():
     return "True"
 
 
-@app.route('/register', methods=['POST','GET'])
+@app.route('/register/<username>/<password>', methods=['POST','GET'])
 def register(username, password):
     session = Session()
     s = session.query(User).get(username)
@@ -31,7 +31,7 @@ def register(username, password):
 
 
 #returns api key based on hash of current datetime
-@app.route('/authenticate', methods=['POST','GET'])
+@app.route('/authenticate/<username>/<password>', methods=['POST','GET'])
 def authenticate(username, password):
     session = Session()
     s = session.query(User).get(username)
@@ -44,7 +44,7 @@ def authenticate(username, password):
     return json.dumps({"success":False})
 
 
-@app.route('/addDevice', methods=['POST','GET'])
+@app.route('/addDevice/<username>/<apiKey>/<newMacID>', methods=['POST','GET'])
 def addDevice(username, apiKey, newMacID):
     session = Session()
     s = session.query(User).get(username)
@@ -64,7 +64,7 @@ def addDevice(username, apiKey, newMacID):
 #friend is gonna be a User object with all its attribuets (columns)
 #return json of the friends database belonging to this current user.
 
-@app.route('/addFriend', methods=['POST','GET'])
+@app.route('/addFriend/<username>/<apiKey>/<friendName>', methods=['POST','GET'])
 def addFriend(username, apiKey, friendName):
     session = Session()
     s = session.query(User).get(username)
@@ -88,7 +88,7 @@ def addFriend(username, apiKey, friendName):
 #username1 is name of guy who initiates friend request
 #username 2 is name of person receiving friend request
 #message is string, which is the message user1 sends to user 2
-@app.route('/addReminder', methods=['POST','GET'])
+@app.route('/addReminder/<apiKey>/<userReceiver>/<userTrigger>/<message>/<time>', methods=['POST','GET'])
 def addReminder(apiKey, userReceiver, userTrigger, message, time):
     session = Session()
     s1 = session.query(User).get(userReceiver)
@@ -108,7 +108,7 @@ def addReminder(apiKey, userReceiver, userTrigger, message, time):
     session.close()
     return json.dumps({"success":True})
 
-@app.route('/friendsList', methods=['POST','GET'])
+@app.route('/friendsList/<username>/<apiKey>', methods=['POST','GET'])
 def friendList(username, apiKey):
     session = Session()
     s = session.query(User).get(username)
@@ -119,9 +119,9 @@ def friendList(username, apiKey):
         session.close()
         return json.dumps({"success":False})
     session.close()
-    return json.dumps({"friends":s.friends, "success":True})
+    return json.dumps({"users":s.friends, "success":True})
 
-@app.route('/reminderList', methods=['POST','GET'])
+@app.route('/reminderList/<username>/<apiKey>', methods=['POST','GET'])
 def reminderList(username, apiKey):
     session = Session()
     s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
@@ -134,7 +134,7 @@ def reminderList(username, apiKey):
     session.close()
     return json.dumps({"reminders":s, "success":True})
 
-@app.route('/processIds', methods=['POST','GET'])
+@app.route('/processIds/<idList>/<username>/<apiKey>', methods=['POST','GET'])
 def processIds(idList, username, APIKey):
     session = Session()
     s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
@@ -150,7 +150,7 @@ def processIds(idList, username, APIKey):
     session.close()
     return json.dumps({"userList":answerList,"success":True})
 
-@app.route('/changePassword', methods=['POST','GET'])
+@app.route('/changePassword/<username>/<oldPassword>/<newPassword>', methods=['POST','GET'])
 def changePassword(username, oldPassword, newPassword):
     session = Session()
     s = session.query(User).get(oldPassword).first()

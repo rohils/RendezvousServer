@@ -63,7 +63,8 @@ class User(Base):
     @validates('password')
     def _validate_password(self, key, pwd):
         return getattr(type(self), key).type.validator(pwd)
-    friends = db.relationship('User')
+    friend_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    friends = db.relationship('User', remote_side=[id])
     macids = db.relationship('MACIDs')
     apikeys = db.relationship('APIKey')
 
@@ -71,8 +72,8 @@ class Reminder(Base):
     __tablename__ = 'reminders'
 
     id = db.Column(db.Integer, primary_key = True)
-    userTrigger = db.relationship('User', backref= 'reminders', lazy='dynamic', uselist = False)
-    userReceiver = db.relationship('User', backref= 'reminders', lazy='dynamic', uselist = False)
+    userTrigger = db.relationship('User', db.ForeignKey('users.id'), backref= 'reminders', lazy='dynamic', uselist = False)
+    userReceiver = db.relationship('User', db.ForeignKey('users.id'), backref= 'reminders', lazy='dynamic', uselist = False)
     reminderText = db.Column('message', db.Text)
     time = db.Column('time', db.Integer)
 
