@@ -16,14 +16,7 @@ def create():
 #assumes database is named Users
 @app.route('/authenticate', methods=['POST'])
 def authenticate(id):
-    #s = Users.query.get(id)
-    #toHash = s.password._convert(s.username)
-
-    d = datetime.utcnow()
-    d = d.strftime('%m/%d/%Y')
-    
-    #cirque du twerque of all api key generations
-    return json.dumps(md5_crypt.encrypt(d))
+    return json.dumps(md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y')))
 
 @app.route('/addDevice', methods=['POST'])
 def addDevice(username, newMacID):
