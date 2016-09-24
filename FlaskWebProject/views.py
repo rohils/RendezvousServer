@@ -38,11 +38,15 @@ def addDevice(username, newMacID):
 def addFriend(username, friendname):
     session = Session()
     s = session.query(User).get(username)
+    if not(s):
+        return json.dumps('false')
     f = session.query(User).get(friendname)
+    if not(f):
+        return json.dumps('false')
     #dont know if below line works like this.
     s.friends.append(f)
     session.commit()
-    return json.dumps(s.friends)
+    return json.dumps('true')
 
 
 #username1 is name of guy who initiates friend request
@@ -52,9 +56,12 @@ def addFriend(username, friendname):
 def addReminder(username1, username2, message):
     session = Session()
     s1 = session.query(User).get(username1)
+    if not(s1):
+        return json.dumps('false')
     s2 = session.query(User).get(username2)
-    newReminder = Reminder(id=md5_crypt.encrypt(username1+username2), userTrigger=s1,
-        userReceiver=s2, reminderText=message, time=datetime.utcnow())
+    if not(s2):
+        return json.dumps('false')
+    newReminder = Reminder(userTrigger=s1, userReceiver=s2, reminderText=message, time=datetime.utcnow())
     session.add(newReminder)
     session.commit()
-    return json.dumps(session.query(reminders).all())
+    return json.dumps('true')
