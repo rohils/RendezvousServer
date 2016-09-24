@@ -31,7 +31,6 @@ def authenticate(username, password):
 
 @app.route('/addDevice', methods=['POST','GET'])
 def addDevice(username, newMacID, apiKey):
->>>>>>> 34a3223ae7603b79f07f95e96dca6d2750238513
     session = Session()
     s = session.query(User).get(username)
     if not(s):
