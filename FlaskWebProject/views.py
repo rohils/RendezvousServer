@@ -13,8 +13,7 @@ Session = sessionmaker(bind=engine)
 
 @app.route('/create')
 def create():
-    createDB()
-    return "True"
+    return createDB()
 
 #returns api key based on hash of current datetime
 @app.route('/authenticate', methods=['POST','GET'])
@@ -30,10 +29,12 @@ def authenticate(username, password):
 
 
 @app.route('/addDevice', methods=['POST','GET'])
-def addDevice(username, newMacID, apiKey):
+def addDevice(username, apiKey, newMacID):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
+        return json.dumps(False)
+    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
         return json.dumps(False)
     s.macids.append(MACIDs(macid = newMacID))
     session.commit()
@@ -44,13 +45,15 @@ def addDevice(username, newMacID, apiKey):
 #return json of the friends database belonging to this current user.
 
 @app.route('/addFriend', methods=['POST','GET'])
-def addFriend(username, friendname):
+def addFriend(username, apiKey, friendName):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
         return json.dumps(False)
-    f = session.query(User).get(friendname)
+    f = session.query(User).get(friendName)
     if not(f):
+        return json.dumps(False)
+    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
         return json.dumps(False)
     #dont know if below line works like this.
     s.friends.append(f)
@@ -62,15 +65,17 @@ def addFriend(username, friendname):
 #username 2 is name of person receiving friend request
 #message is string, which is the message user1 sends to user 2
 @app.route('/addReminder', methods=['POST','GET'])
-def addReminder(username1, username2, message):
+def addReminder(apiKey, userReceiver, userTrigger, message, time):
     session = Session()
-    s1 = session.query(User).get(username1)
+    s1 = session.query(User).get(userReceiver)
     if not(s1):
         return json.dumps(False)
-    s2 = session.query(User).get(username2)
+    s2 = session.query(User).get(userTrigger)
     if not(s2):
         return json.dumps(False)
-    newReminder = Reminder(userTrigger=s1, userReceiver=s2, reminderText=message, time=datetime.utcnow())
+    if apiKey not in session.query(APIKey).filter(user_id == s1.id):
+        return json.dumps(False)
+    newReminder = Reminder(userTrigger=s2, userReceiver=s1, reminderText=message, time=time)
     session.add(newReminder)
     session.commit()
     return json.dumps(True)
@@ -79,14 +84,20 @@ def addReminder(username1, username2, message):
 def friendList(username, apiKey):
     session = Session()
     s = session.query(User).get(username)
-    succeeded = False if len(s.friends) == 0 else True
+    if not(s):
+        return json.dumps(False)
+    if apiKey not in session.query(APIKey).filter(user_id == s.id):
+        return json.dumps(False)
     return json.dumps({friends:s.friends, success:succeeded})
 
 @app.route('/reminderList', methods=['POST','GET'])
 def reminderList(username, apiKey):
     session = Session()
     s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
-    succeeded = False if len(s) == 0 else True
+    if not(s):
+        return json.dumps(False)
+    if apiKey not in session.query(APIKey).filter(user_id == s.id):
+        return json.dumps(False)
     return json.dumps({reminders:s, success:succeeded})
 
 @app.route('/processIds', methods=['POST','GET'])

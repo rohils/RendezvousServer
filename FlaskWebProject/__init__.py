@@ -74,7 +74,7 @@ class Reminder(Base):
     userTrigger = db.relationship('User', backref= 'reminders', lazy='dynamic', uselist = False)
     userReceiver = db.relationship('User', backref= 'reminders', lazy='dynamic', uselist = False)
     reminderText = db.Column('message', db.Text)
-    time = db.Column('time', db.DateTime, primary_key = True)
+    time = db.Column('time', db.Integer)
 
 DB_CONN_URI_DEFAULT = "./rendezvousdb.db"
 conn = sqlite3.connect(DB_CONN_URI_DEFAULT)
