@@ -74,7 +74,7 @@ def addReminder(apiKey, userReceiver, userTrigger, message, time):
     s2 = session.query(User).get(userTrigger)
     if not(s2):
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(user_id == s1.id):
+    if apiKey not in session.query(APIKey).filter(user_id == s1.id).all():
         return json.dumps({"success":False})
     newReminder = Reminder(userTrigger=s2, userReceiver=s1, reminderText=message, time=time)
     session.add(newReminder)
@@ -87,7 +87,7 @@ def friendList(username, apiKey):
     s = session.query(User).get(username)
     if not(s):
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(user_id == s.id):
+    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
         return json.dumps({"success":False})
     return json.dumps({friends:s.friends, success:succeeded})
 
@@ -97,13 +97,16 @@ def reminderList(username, apiKey):
     s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
     if not(s):
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(user_id == s.id):
+    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
         return json.dumps({"success":False})
     return json.dumps({"reminders":s, "success":True})
 
 @app.route('/processIds', methods=['POST','GET'])
 def processIds(idList, username, APIKey):
     session = Session()
+    s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
+    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+        return json.dumps({"success":False})
     answerList = []
     for hash in idList:
         m = session.query(MACIDS).get(hash).first().user_id
@@ -111,4 +114,3 @@ def processIds(idList, username, APIKey):
         if not user: answerList.append("")
         else: answerList.append(user.username)
     return json.dumps(answerList)
-
