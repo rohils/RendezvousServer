@@ -43,6 +43,7 @@ class User(Base):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column('username', db.String(80), unique = True)
     password = db.Column('password', Password)
+    apiKey = db.Column('apiKey', db.Integer)
     @validates('password')
     def _validate_password(self, key, pwd):
         return getattr(type(self), key).type.validator(pwd)
