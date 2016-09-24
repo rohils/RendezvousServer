@@ -91,3 +91,12 @@ def reminderList(username, apiKey):
 
 @app.route('/processIds', methods=['POST','GET'])
 def processIds(idList, username, APIKey):
+    session = Session()
+    answerList = []
+    for hash in idList:
+        m = session.query(MACIDS).get(hash).first().user_id
+        user = session.query(Users).get(m).first()
+        if not user: answerList.append("")
+        else: answerList.append(user.username)
+    return json.dumps(answerList)
+
