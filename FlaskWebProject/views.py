@@ -76,13 +76,25 @@ def addReminder(username1, username2, message):
     return json.dumps(True)
 
 @app.route('/friendsList', methods=['POST','GET'])
-def friendsList(username):
+def friendsList(username, APIkey):
     session = Session()
     s = session.query(User).get(username)
-    return json.dumps(s.friends)
+    succeeded = False if len(s.friends) == 0 else True
+    return json.dumps({friends:s.friends, success:succeeded})
 
 @app.route('/reminderList', methods=['POST','GET'])
-def reminderList():
+def reminderList(APIkey):
     session = Session()
     s = session.query(Reminder).all()
+<<<<<<< HEAD
+    succeeded = False if len(s) == 0 else True
+    return json.dumps({reminders:s, success:succeeded})
+
+@app.route('/processIds', methods=['POST','GET'])
+def processIds():
+
+
+
+=======
     return json.dumps(s)
+>>>>>>> 1ccd7cff52966e39d94fcbc8ccb98612e5e71566
