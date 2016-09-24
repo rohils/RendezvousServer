@@ -14,8 +14,7 @@ db = SQLAlchemy(app)
 class Password(db.TypeDecorator):
     impl = db.Text
 
-    def __init__(self, rounds = 12, **kwargs):
-        self.rounds = rounds
+    def __init__(self, **kwargs):
         super(Password, self).__init__(**kwargs)
 
     def process_bind_param(self, value, dialect):
@@ -32,7 +31,7 @@ class Password(db.TypeDecorator):
         if type(value) == pwh:
             return value
         elif type(value) == str:
-            return pwh.new(value, self.rounds)
+            return pwh.new(value)
         elif value is not None:
             raise TypeError('Cannot convert {} to a PasswordHash'.format(type(value)))
 
