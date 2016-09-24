@@ -13,7 +13,7 @@ def create():
     createDB()
     return "True"
 
-#assumes database is named Users
+#returns api key based on hash of current datetime
 @app.route('/authenticate', methods=['POST'])
 def authenticate(id):
     return json.dumps(md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y')))
@@ -30,7 +30,16 @@ def addDevice(username, newMacID):
         return true
     else: return false
 
-"""def addFriend(username):
+#username is the name of current user
+#friend is gonna be a User object with all its attribuets (columns)
+#return json of the friends database belonging to this current user.
+@app.route('/addFriend', methods=['POST'])
+def addFriend(username, friend):
     s = Users.query.get(username)
-    #friends = s.
-    #i think we need a friends class in init to hold another table."""
+    #dont know if below line works like this.
+    s.friends.append(friend)
+    db.sessions.commit()
+    return json.dumps(s.friends)
+
+
+    
