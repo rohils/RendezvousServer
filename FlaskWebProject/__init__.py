@@ -86,6 +86,7 @@ def createDB():
     conn = sqlite3.connect(DB_CONN_URI_DEFAULT)
     engine = create_engine("sqlite:///" + DB_CONN_URI_DEFAULT)
     Base.metadata.create_all(engine)
+    return str(engine.url)
 
 
 
