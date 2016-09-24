@@ -43,7 +43,8 @@ class MACIDs(Base):
     __tablename__ = 'macids'
 
     id = db.Column(db.Integer, primary_key = True)
-    macids = db.Column(db.String(128))
+    macid = db.Column(db.String(128))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 class User(Base):
     __tablename__ = 'users'

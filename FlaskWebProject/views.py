@@ -5,8 +5,11 @@ Routes and views for the flask application.
 from datetime import datetime
 from flask import render_template
 from FlaskWebProject import app
-from . import createDB
+from . import createDB, User, engine, MACIDs
 from passlib.hash import md5_crypt
+from sqlalchemy.orm import sessionmaker
+
+Session = sessionmaker(bind=engine)
 
 @app.route('/create')
 def create():
@@ -20,15 +23,13 @@ def authenticate(id):
 
 @app.route('/addDevice', methods=['POST'])
 def addDevice(username, newMacID):
-    s = Users.query.get(username)
-    mac = s.macids
-    apiKey = s.apiKey
+    session = Session()
+    s = session.query(User).get(username)
+    if not(s):
+        return json.dumps('false')
+    s.macids.append(MACIDs(macid = newMacID))
+    session.commit()
 
-    if apiKey == s.password._convert(s.username):
-        s.macids = s.macids.append
-        db.sessions.commit()
-        return true
-    else: return false
 
 """def addFriend(username):
     s = Users.query.get(username)
