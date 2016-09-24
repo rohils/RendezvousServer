@@ -17,11 +17,11 @@ def create():
     return "True"
 
 #returns api key based on hash of current datetime
-@app.route('/authenticate', methods=['POST'])
+@app.route('/authenticate', methods=['POST','GET'])
 def authenticate():
     return json.dumps(md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y')))
 
-@app.route('/addDevice', methods=['POST'])
+@app.route('/addDevice', methods=['POST','GET'])
 def addDevice(username, newMacID):
     session = Session()
     s = session.query(User).get(username)
@@ -34,7 +34,7 @@ def addDevice(username, newMacID):
 #username is the name of current user
 #friend is gonna be a User object with all its attribuets (columns)
 #return json of the friends database belonging to this current user.
-@app.route('/addFriend', methods=['POST'])
+@app.route('/addFriend', methods=['POST','GET'])
 def addFriend(username, friendname):
     session = Session()
     s = session.query(User).get(username)
@@ -52,7 +52,7 @@ def addFriend(username, friendname):
 #username1 is name of guy who initiates friend request
 #username 2 is name of person receiving friend request
 #message is string, which is the message user1 sends to user 2
-@app.route('/addReminder', methods=['POST'])
+@app.route('/addReminder', methods=['POST','GET'])
 def addReminder(username1, username2, message):
     session = Session()
     s1 = session.query(User).get(username1)
@@ -65,3 +65,17 @@ def addReminder(username1, username2, message):
     session.add(newReminder)
     session.commit()
     return json.dumps('true')
+
+@app.route('/friendsList', methods=['POST','GET'])
+def friendsList(username):
+    session = Session()
+    s = session.query(User).get(username)
+    return json.dumps(s.friends)
+
+@app.route('/reminderList', methods=['POST','GET'])
+def reminderList():
+    session = Session()
+    s = session.query(Reminder).all()
+    return json.dumps(s)
+
+
