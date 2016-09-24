@@ -26,7 +26,7 @@ def addDevice(username, newMacID):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
-        return json.dumps('false')
+        return json.dumps(False)
     s.macids.append(MACIDs(macid = newMacID))
     session.commit()
 
@@ -39,14 +39,14 @@ def addFriend(username, friendname):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
-        return json.dumps('false')
+        return json.dumps(False)
     f = session.query(User).get(friendname)
     if not(f):
-        return json.dumps('false')
+        return json.dumps(False)
     #dont know if below line works like this.
     s.friends.append(f)
     session.commit()
-    return json.dumps('true')
+    return json.dumps(True)
 
 
 #username1 is name of guy who initiates friend request
@@ -57,25 +57,31 @@ def addReminder(username1, username2, message):
     session = Session()
     s1 = session.query(User).get(username1)
     if not(s1):
-        return json.dumps('false')
+        return json.dumps(False)
     s2 = session.query(User).get(username2)
     if not(s2):
-        return json.dumps('false')
+        return json.dumps(False)
     newReminder = Reminder(userTrigger=s1, userReceiver=s2, reminderText=message, time=datetime.utcnow())
     session.add(newReminder)
     session.commit()
-    return json.dumps('true')
+    return json.dumps(True)
 
 @app.route('/friendsList', methods=['POST','GET'])
 def friendsList(username):
     session = Session()
     s = session.query(User).get(username)
-    return json.dumps(s.friends)
+    succeeded = False if len(s.friends) == 0 else True
+    return json.dumps({friends:s.friends, success:succeeded})
 
 @app.route('/reminderList', methods=['POST','GET'])
 def reminderList():
     session = Session()
     s = session.query(Reminder).all()
-    return json.dumps(s)
+    succeeded = False if len(s) == 0 else True
+    return json.dumps({reminders:s, success:succeeded})
+
+@app.route('/processIds', methods=['POST','GET'])
+def processIds():
+
 
 
