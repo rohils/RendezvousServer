@@ -5,7 +5,6 @@ The flask application package.
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
-from PasswordHash import PasswordHash as pwh
 
 Base = declarative_base()
 app = Flask(__name__)
@@ -22,20 +21,20 @@ class Password(db.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if value is not None:
-            return pwh(value)
+            return PasswordHash(value)
 
     def validator(self, pwd):
         self._convert(pwd)
 
     def _convert(self, value):
-        if type(value) == pwh:
+        if type(value) == PasswordHash:
             return value
         elif type(value) == str:
             return pwh.new(value)
         elif value is not None:
             raise TypeError('Cannot convert {} to a PasswordHash'.format(type(value)))
 
-class MAC_IDs(db.model):
+class MAC_IDs(Base):
     __tablename__ = 'macids'
     id = db.Column(db.Integer, primary_key = True)
     macid = db.Column(db.String(128), unique = True)
@@ -47,9 +46,8 @@ class User(Base):
     username = db.Column(db.String(80), unique = True)
     password = db.Column(Password)
 
-    @validates('password')
     def _validate_password(self, key, pwd):
-        return getattr(type(self) key).type.validator(pwd)
+        return getattr(type(self), key).type.validator(pwd)
 
 
 
