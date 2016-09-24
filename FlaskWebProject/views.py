@@ -13,7 +13,7 @@ def create():
     DB_CONFIG_DICT = {
         'user': 'renDEVous',
         'password': 'qwerty232',
-        'host': 'http://rendezvousserver.azurewebsites.net',
+        'host': 'rendezvousserver.azurewebsites.net',
         'port': 443,
     }
     DB_CONN_FORMAT = "postgresql://{user}:{password}@{host}:{port}/{database}"
