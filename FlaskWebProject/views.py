@@ -13,7 +13,8 @@ Session = sessionmaker(bind=engine)
 
 @app.route('/create')
 def create():
-    return createDB()
+    createDB()
+    return "True"
 
 #returns api key based on hash of current datetime
 @app.route('/authenticate', methods=['POST','GET'])
