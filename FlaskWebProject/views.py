@@ -14,7 +14,7 @@ def create():
         'user': 'renDEVous',
         'password': 'qwerty232',
         'host': 'http://rendezvousserver.azurewebsites.net',
-        'port': 5432,
+        'port': 443,
     }
     DB_CONN_FORMAT = "postgresql://{user}:{password}@{host}:{port}/{database}"
     DB_CONN_URI_DEFAULT = (DB_CONN_FORMAT.format(database='rendezvousDB',**DB_CONFIG_DICT))
