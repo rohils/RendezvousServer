@@ -46,6 +46,7 @@ class User(Base):
     @validates('password')
     def _validate_password(self, key, pwd):
         return getattr(type(self), key).type.validator(pwd)
+    friends = db.relationship('User')
     macids = db.Column('macids', ARRAY(db.String(128)))
 
 class Reminder(Base):
