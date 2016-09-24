@@ -134,7 +134,7 @@ def processIds(idList, username, APIKey):
         if not user: answerList.append("")
         else: answerList.append(user.username)
     session.close()
-    return json.dumps(answerList)
+    return json.dumps({"userList":answerList,"success":True})
 
 @app.route('/changePassword', methods=['POST','GET'])
 def changePassword(username, oldPassword, newPassword):
