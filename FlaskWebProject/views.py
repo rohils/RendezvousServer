@@ -16,6 +16,20 @@ def create():
     createDB()
     return "True"
 
+
+@app.route('/register', methods=['POST','GET'])
+def register(username, password):
+    session = Session()
+    s = session.query(User).get(username)
+    if not(s):
+        session.add(User(username = username, password = password))
+        session.flush()
+        session.close()
+        return({"success":True})
+    else:
+        return({"success":False})
+
+
 #returns api key based on hash of current datetime
 @app.route('/authenticate', methods=['POST','GET'])
 def authenticate(username, password):
