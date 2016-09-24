@@ -13,10 +13,12 @@ Session = sessionmaker(bind=engine)
 
 @app.route('/create')
 def create():
-    return createDB()
+    createDB()
+    return "True"
 
 #returns api key based on hash of current datetime
 @app.route('/authenticate', methods=['POST','GET'])
+<<<<<<< HEAD
 def authenticate(username, password):
     session = Session()
     s = session.query(User).get(username)
@@ -30,20 +32,30 @@ def authenticate(username, password):
 
 @app.route('/addDevice', methods=['POST','GET'])
 def addDevice(username, newMacID):
+=======
+def authenticate():
+    return json.dumps(md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y')))
+
+@app.route('/addDevice', methods=['POST','GET'])
+def addDevice(username, newMacID, apiKey):
+>>>>>>> 34a3223ae7603b79f07f95e96dca6d2750238513
     session = Session()
     s = session.query(User).get(username)
     if not(s):
         return json.dumps(False)
     s.macids.append(MACIDs(macid = newMacID))
     session.commit()
-    return json.dumps(True)
 
 
 #username is the name of current user
 #friend is gonna be a User object with all its attribuets (columns)
 #return json of the friends database belonging to this current user.
+<<<<<<< HEAD
 
 @app.route('/addFriend', methods=['POST','GET'])]
+=======
+@app.route('/addFriend', methods=['POST','GET'])
+>>>>>>> 34a3223ae7603b79f07f95e96dca6d2750238513
 def addFriend(username, friendname):
     session = Session()
     s = session.query(User).get(username)
@@ -76,18 +88,18 @@ def addReminder(username1, username2, message):
     return json.dumps(True)
 
 @app.route('/friendsList', methods=['POST','GET'])
-def friendsList(username, APIkey):
+def friendList(username, apiKey):
     session = Session()
     s = session.query(User).get(username)
     succeeded = False if len(s.friends) == 0 else True
     return json.dumps({friends:s.friends, success:succeeded})
 
 @app.route('/reminderList', methods=['POST','GET'])
-def reminderList(APIkey):
+def reminderList(username, apiKey):
     session = Session()
-    s = session.query(Reminder).all()
+    s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
     succeeded = False if len(s) == 0 else True
     return json.dumps({reminders:s, success:succeeded})
 
 @app.route('/processIds', methods=['POST','GET'])
-def processIds():
+def processIds(idList, username, APIKey):
