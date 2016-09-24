@@ -25,7 +25,7 @@ def authenticate(username, password):
         session.add(APIKey(apikey = apiKey))
         session.commit()
         return json.dumps(apiKey)
-    return json.dumps(False)
+    return json.dumps({"success":False})
 
 
 @app.route('/addDevice', methods=['POST','GET'])
@@ -33,11 +33,12 @@ def addDevice(username, apiKey, newMacID):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
-        return json.dumps(False)
+        return json.dumps({"success":False})
     s.macids.append(MACIDs(macid = newMacID))
     session.commit()
+    return json.dumps({"success":True})
 
 
 #username is the name of current user
@@ -49,16 +50,16 @@ def addFriend(username, apiKey, friendName):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     f = session.query(User).get(friendName)
     if not(f):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
-        return json.dumps(False)
+        return json.dumps({"success":False})
     #dont know if below line works like this.
     s.friends.append(f)
     session.commit()
-    return json.dumps(True)
+    return json.dumps({"success":True})
 
 
 #username1 is name of guy who initiates friend request
@@ -69,25 +70,25 @@ def addReminder(apiKey, userReceiver, userTrigger, message, time):
     session = Session()
     s1 = session.query(User).get(userReceiver)
     if not(s1):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     s2 = session.query(User).get(userTrigger)
     if not(s2):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s1.id):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     newReminder = Reminder(userTrigger=s2, userReceiver=s1, reminderText=message, time=time)
     session.add(newReminder)
     session.commit()
-    return json.dumps(True)
+    return json.dumps({"success":True})
 
 @app.route('/friendsList', methods=['POST','GET'])
 def friendList(username, apiKey):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s.id):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     return json.dumps({friends:s.friends, success:succeeded})
 
 @app.route('/reminderList', methods=['POST','GET'])
@@ -95,10 +96,10 @@ def reminderList(username, apiKey):
     session = Session()
     s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
     if not(s):
-        return json.dumps(False)
+        return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s.id):
-        return json.dumps(False)
-    return json.dumps({reminders:s, success:succeeded})
+        return json.dumps({"success":False})
+    return json.dumps({"reminders":s, "success":True})
 
 @app.route('/processIds', methods=['POST','GET'])
 def processIds(idList, username, APIKey):
