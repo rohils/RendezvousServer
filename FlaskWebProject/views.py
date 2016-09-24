@@ -115,3 +115,13 @@ def processIds(idList, username, APIKey):
         if not user: answerList.append("")
         else: answerList.append(user.username)
     return json.dumps(answerList)
+
+@app.route('/changePassword', methods=['POST','GET'])
+def changePassword(username, oldPassword, newPassword):
+    session = Session()
+    s = session.query(User).get(oldPassword).first()
+    t = session.query(User).get(username).first()
+    if not s or not t or not s == t: return json.dumps({"success":False})
+    s.password = newPassword
+    session.commit()
+    return json.dumps({"success":True})
