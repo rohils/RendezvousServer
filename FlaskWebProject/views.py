@@ -86,15 +86,8 @@ def friendsList(username, APIkey):
 def reminderList(APIkey):
     session = Session()
     s = session.query(Reminder).all()
-<<<<<<< HEAD
     succeeded = False if len(s) == 0 else True
     return json.dumps({reminders:s, success:succeeded})
 
 @app.route('/processIds', methods=['POST','GET'])
 def processIds():
-
-
-
-=======
-    return json.dumps(s)
->>>>>>> 1ccd7cff52966e39d94fcbc8ccb98612e5e71566
