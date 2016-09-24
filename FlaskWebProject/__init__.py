@@ -66,6 +66,11 @@ class Reminder(Base):
     reminderText = db.Column('message', db.Text)
     time = db.Column('time', db.DateTime, primary_key = True)
 
+DB_CONN_URI_DEFAULT = "./rendezvousdb.db"
+conn = sqlite3.connect(DB_CONN_URI_DEFAULT)
+engine = create_engine("sqlite:///" + DB_CONN_URI_DEFAULT)
+Base.metadata.create_all(engine)
+
 def createDB():
     DB_CONN_URI_DEFAULT = "./rendezvousdb.db"
     conn = sqlite3.connect(DB_CONN_URI_DEFAULT)
