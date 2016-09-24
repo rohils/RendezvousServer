@@ -16,7 +16,7 @@ def create():
         'host': 'rendezvousserver.azurewebsites.net',
         'port': 443,
     }
-    DB_CONN_FORMAT = "sqllite://{user}:{password}@{host}:{port}/{database}"
+    DB_CONN_FORMAT = "sqlite://{user}:{password}@{host}:{port}/{database}"
     DB_CONN_URI_DEFAULT = (DB_CONN_FORMAT.format(database='rendezvousDB',**DB_CONFIG_DICT))
     engine = create_engine(DB_CONN_URI_DEFAULT)
     if not database_exists(engine.url):
