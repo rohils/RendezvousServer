@@ -5,9 +5,10 @@ Routes and views for the flask application.
 from datetime import datetime
 from flask import render_template
 from FlaskWebProject import app
-from . import createDB, User, engine, MACIDs, Password, APIKey, Reminder
+from . import createDB, User, engine, MACIDs, Password, APIKey, Reminder, db
 from passlib.hash import md5_crypt
 from sqlalchemy.orm import sessionmaker
+import pickle
 
 Session = sessionmaker(bind=engine)
 
@@ -17,12 +18,13 @@ def create():
     return "True"
 
 
-@app.route('/register/<username>/<password>', methods=['POST','GET'])
+@app.route('/register/<username>/<password>/', methods=['GET','POST'])
 def register(username, password):
     session = Session()
     s = session.query(User).get(username)
+    session.flush()
     if not(s):
-        session.add(User(username = username, password = password))
+        session.add(User(uname = username, pswd = password, friends = ''))
         session.flush()
         session.close()
         return({"success":True})
@@ -51,7 +53,7 @@ def addDevice(username, apiKey, newMacID):
     if not(s):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
         session.close()
         return json.dumps({"success":False})
     s.macids.append(MACIDs(macid = newMacID))
@@ -75,11 +77,11 @@ def addFriend(username, apiKey, friendName):
     if not(f):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
         session.close()
         return json.dumps({"success":False})
     #dont know if below line works like this.
-    s.friends.append(f)
+    pickle.dumps(pickle.loads(s.friends).append(s.uname))
     session.flush()
     session.close()
     return json.dumps({"success":True})
@@ -99,7 +101,7 @@ def addReminder(apiKey, userReceiver, userTrigger, message, time):
     if not(s2):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(user_id == s1.id).all():
+    if apiKey not in session.query(APIKey).filter(uname == s1.uname).all():
         session.close()
         return json.dumps({"success":False})
     newReminder = Reminder(userTrigger=s2, userReceiver=s1, reminderText=message, time=time)
@@ -115,11 +117,12 @@ def friendList(username, apiKey):
     if not(s):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
         session.close()
         return json.dumps({"success":False})
+    fnames = pickle.loads(s.friends)
     session.close()
-    return json.dumps({"users":s.friends, "success":True})
+    return json.dumps({"users":fnames, "success":True})
 
 @app.route('/reminderList/<username>/<apiKey>', methods=['POST','GET'])
 def reminderList(username, apiKey):
@@ -128,7 +131,7 @@ def reminderList(username, apiKey):
     if not(s):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
         session.close()
         return json.dumps({"success":False})
     session.close()
@@ -137,16 +140,15 @@ def reminderList(username, apiKey):
 @app.route('/processIds/<idList>/<username>/<apiKey>', methods=['POST','GET'])
 def processIds(idList, username, APIKey):
     session = Session()
-    s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
-    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+    s = session.query(Reminder).filter(Reminder.userReceiver.uname==username).all()
+    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
         session.close()
         return json.dumps({"success":False})
     answerList = []
     for hash in idList:
-        m = session.query(MACIDS).get(hash).first().user_id
-        user = session.query(Users).get(m).first()
+        m = session.query(MACIDS).get(hash).first().name
         if not user: answerList.append("")
-        else: answerList.append(user.username)
+        else: answerList.append(m)
     session.close()
     return json.dumps({"userList":answerList,"success":True})
 
@@ -154,17 +156,17 @@ def processIds(idList, username, APIKey):
 def changePassword(username, oldPassword, newPassword):
     session = Session()
     s = session.query(User).get(oldPassword).first()
-    t = session.query(User).get(username).first()
+    t = session.query(User).get(uname).first()
     if not s or not t or not s == t: return json.dumps({"success":False})
     s.password = newPassword
     session.commit()
     return json.dumps({"success":True})
 
-@app.route('/userExists', methods=['POST','GET'])
+@app.route('/userExists/<userQuery>/<username>/<apiKey>', methods=['POST','GET'])
 def userExists(userQuery, username, apiKey):
     session = Session()
-    s = session.query(Users).get(userQuery).all()
-    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+    s = session.query(User).get(userQuery).all()
+    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
         session.close()
         return json.dumps({"success":False})
     else: return json.dumps({"success":True if s else False})

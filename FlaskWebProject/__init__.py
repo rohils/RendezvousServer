@@ -9,6 +9,10 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import validates
 from sqlalchemy import create_engine
 import sqlite3
+import pickle
+from PasswordHash import PasswordHash
+from sqlalchemy.types as types
+
 
 Base = declarative_base()
 app = Flask(__name__)
@@ -35,47 +39,70 @@ class Password(db.TypeDecorator):
         if type(value) == PasswordHash:
             return value
         elif type(value) == str:
-            return pwh.new(value)
+            return PasswordHash.new(value)
         elif value is not None:
             raise TypeError('Cannot convert {} to a PasswordHash'.format(type(value)))
 
+
 class APIKey(Base):
-    __tablename__ = 'apikeys'
+    __tablename__ = 'api_keys'
 
-    id = db.Column(db.Integer, primary_key = True)
-    apikey = db.Column(db.Text)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    apikey = db.Column(db.Text, primary_key= True)
+    name = db.Column(db.String(80), db.ForeignKey('users.uname'))
+    def __init__(self, apikey, name):
+        self.apikey = apikey
+        self.name = name
 
+    def __repr__(self):
+        return '<APIKey %r>' % self.apikey
 
 class MACIDs(Base):
-    __tablename__ = 'macids'
+    __tablename__ = 'mac_ids'
 
-    id = db.Column(db.Integer, primary_key = True)
-    macid = db.Column(db.String(128))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    macid = db.Column(db.String(128), primary_key = True)
+    name = db.Column(db.String(80), db.ForeignKey('users.uname'))
+    def __init__(self, macid, name):
+        self.macid = macid
+        self.name = name
+
+    def __repr__(self):
+        return '<MACID %r>' % self.macid
 
 class User(Base):
     __tablename__ = 'users'
-
-    id = db.Column(db.Integer, primary_key = True)
-    username = db.Column('username', db.String(80), unique = True)
-    password = db.Column('password', Password)
-    @validates('password')
+    uname = db.Column('uname', db.String(80), primary_key = True)
+    pswd = db.Column('pswd', Password)
+    @validates('pswd')
     def _validate_password(self, key, pwd):
         return getattr(type(self), key).type.validator(pwd)
-    friend_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    friends = db.relationship('User', remote_side=[id])
+    friends = db.Column('friends', db.Text)
     macids = db.relationship('MACIDs')
     apikeys = db.relationship('APIKey')
 
+    def __init__(self, uname, pswd, friends):
+        self.uname = uname
+        self.pswd = pswd
+        self.friends = friends
+
+    def __repr__(self):
+        return '<User %r>' % self.uname
+
+
 class Reminder(Base):
     __tablename__ = 'reminders'
-
-    id = db.Column(db.Integer, primary_key = True)
-    userTrigger = db.relationship('User', db.ForeignKey('users.id'), backref= 'reminders', lazy='dynamic', uselist = False)
-    userReceiver = db.relationship('User', db.ForeignKey('users.id'), backref= 'reminders', lazy='dynamic', uselist = False)
+    userTrigger = db.Column('utrigger', db.String(80))
+    userReceiver = db.Column('ureceiver', db.String(80), primary_key = True)
     reminderText = db.Column('message', db.Text)
-    time = db.Column('time', db.Integer)
+    time = db.Column('datetime', db.Integer)
+
+    def __init__(self, userTrigger, userReceiver, reminderText, time):
+        self.userTrigger = userTrigger
+        self.userReceiver = userReceiver
+        self.reminderText = reminderText
+        self.time = time
+
+    def __repr__(self):
+        return '<Reminder>'
 
 DB_CONN_URI_DEFAULT = "./rendezvousdb.db"
 conn = sqlite3.connect(DB_CONN_URI_DEFAULT)
