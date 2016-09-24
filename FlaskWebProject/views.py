@@ -18,7 +18,6 @@ def create():
 
 #returns api key based on hash of current datetime
 @app.route('/authenticate', methods=['POST','GET'])
-<<<<<<< HEAD
 def authenticate(username, password):
     session = Session()
     s = session.query(User).get(username)
@@ -29,12 +28,6 @@ def authenticate(username, password):
         return json.dumps(apiKey)
     return json.dumps(False)
 
-
-@app.route('/addDevice', methods=['POST','GET'])
-def addDevice(username, newMacID):
-=======
-def authenticate():
-    return json.dumps(md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y')))
 
 @app.route('/addDevice', methods=['POST','GET'])
 def addDevice(username, newMacID, apiKey):
@@ -50,12 +43,8 @@ def addDevice(username, newMacID, apiKey):
 #username is the name of current user
 #friend is gonna be a User object with all its attribuets (columns)
 #return json of the friends database belonging to this current user.
-<<<<<<< HEAD
 
-@app.route('/addFriend', methods=['POST','GET'])]
-=======
 @app.route('/addFriend', methods=['POST','GET'])
->>>>>>> 34a3223ae7603b79f07f95e96dca6d2750238513
 def addFriend(username, friendname):
     session = Session()
     s = session.query(User).get(username)
