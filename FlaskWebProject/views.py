@@ -24,8 +24,9 @@ def authenticate(username, password):
     if s.password == password:
         apiKey = md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y'))
         session.add(APIKey(apikey = apiKey))
-        session.commit()
-        return json.dumps(apiKey)
+        session.flush()
+        session.close()
+        return json.dumps({"success":True, "apiKey":apiKey})
     return json.dumps({"success":False})
 
 
@@ -34,11 +35,14 @@ def addDevice(username, apiKey, newMacID):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
+        session.close()
         return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+        session.close()
         return json.dumps({"success":False})
     s.macids.append(MACIDs(macid = newMacID))
-    session.commit()
+    session.flush()
+    session.close()
     return json.dumps({"success":True})
 
 
@@ -51,15 +55,19 @@ def addFriend(username, apiKey, friendName):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
+        session.close()
         return json.dumps({"success":False})
     f = session.query(User).get(friendName)
     if not(f):
+        session.close()
         return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+        session.close()
         return json.dumps({"success":False})
     #dont know if below line works like this.
     s.friends.append(f)
-    session.commit()
+    session.flush()
+    session.close()
     return json.dumps({"success":True})
 
 
@@ -71,15 +79,19 @@ def addReminder(apiKey, userReceiver, userTrigger, message, time):
     session = Session()
     s1 = session.query(User).get(userReceiver)
     if not(s1):
+        session.close()
         return json.dumps({"success":False})
     s2 = session.query(User).get(userTrigger)
     if not(s2):
+        session.close()
         return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s1.id).all():
+        session.close()
         return json.dumps({"success":False})
     newReminder = Reminder(userTrigger=s2, userReceiver=s1, reminderText=message, time=time)
     session.add(newReminder)
-    session.commit()
+    session.flush()
+    session.close()
     return json.dumps({"success":True})
 
 @app.route('/friendsList', methods=['POST','GET'])
@@ -87,19 +99,25 @@ def friendList(username, apiKey):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
+        session.close()
         return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+        session.close()
         return json.dumps({"success":False})
-    return json.dumps({friends:s.friends, success:succeeded})
+    session.close()
+    return json.dumps({"friends":s.friends, "success":True})
 
 @app.route('/reminderList', methods=['POST','GET'])
 def reminderList(username, apiKey):
     session = Session()
     s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
     if not(s):
+        session.close()
         return json.dumps({"success":False})
     if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+        session.close()
         return json.dumps({"success":False})
+    session.close()
     return json.dumps({"reminders":s, "success":True})
 
 @app.route('/processIds', methods=['POST','GET'])
@@ -107,6 +125,7 @@ def processIds(idList, username, APIKey):
     session = Session()
     s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
     if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+        session.close()
         return json.dumps({"success":False})
     answerList = []
     for hash in idList:
@@ -114,4 +133,5 @@ def processIds(idList, username, APIKey):
         user = session.query(Users).get(m).first()
         if not user: answerList.append("")
         else: answerList.append(user.username)
+    session.close()
     return json.dumps(answerList)
