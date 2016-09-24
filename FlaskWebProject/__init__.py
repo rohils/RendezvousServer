@@ -39,6 +39,14 @@ class Password(db.TypeDecorator):
         elif value is not None:
             raise TypeError('Cannot convert {} to a PasswordHash'.format(type(value)))
 
+class APIKey(Base):
+    __tablename__ = 'apikeys'
+
+    id = db.Column(db.Integer, primary_key = True)
+    apikey = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+
 class MACIDs(Base):
     __tablename__ = 'macids'
 
@@ -57,6 +65,7 @@ class User(Base):
         return getattr(type(self), key).type.validator(pwd)
     friends = db.relationship('User')
     macids = db.relationship('MACIDs')
+    apikeys = db.relationship('APIKey')
 
 class Reminder(Base):
     __tablename__ = 'reminders'

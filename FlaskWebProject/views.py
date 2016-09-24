@@ -36,6 +36,7 @@ def addDevice(username, newMacID):
 #return json of the friends database belonging to this current user.
 @app.route('/addFriend', methods=['POST'])
 def addFriend(username, friendname):
+    session = Session()
     s = session.query(User).get(username)
     f = session.query(User).get(friendname)
     #dont know if below line works like this.
@@ -49,13 +50,11 @@ def addFriend(username, friendname):
 #message is string, which is the message user1 sends to user 2
 @app.route('/addReminder', methods=['POST'])
 def addReminder(username1, username2, message):
+    session = Session()
     s1 = session.query(User).get(username1)
     s2 = session.query(User).get(username2)
     newReminder = Reminder(id=md5_crypt.encrypt(username1+username2), userTrigger=s1,
         userReceiver=s2, reminderText=message, time=datetime.utcnow())
     session.add(newReminder)
     session.commit()
-    return json.dumps(reminders)
-
-
-    
+    return json.dumps(session.query(reminders).all())
