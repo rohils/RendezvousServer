@@ -22,4 +22,4 @@ def create():
     if not database_exists(engine.url):
         create_database(engine.url)
     print(database_exists(engine.url))
-    return DB_CONN_FORMAT
+    return DB_CONN_URI_DEFAULT
