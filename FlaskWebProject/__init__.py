@@ -7,6 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import validates
+from sqlalchemy import create_engine
+import sqlite3
 
 Base = declarative_base()
 app = Flask(__name__)
@@ -37,6 +39,12 @@ class Password(db.TypeDecorator):
         elif value is not None:
             raise TypeError('Cannot convert {} to a PasswordHash'.format(type(value)))
 
+class MACIDs(Base):
+    __tablename__ = 'macids'
+
+    id = db.Column(db.Integer, primary_key = True)
+    macids = db.Column(db.String(128))
+
 class User(Base):
     __tablename__ = 'users'
 
@@ -47,7 +55,7 @@ class User(Base):
     def _validate_password(self, key, pwd):
         return getattr(type(self), key).type.validator(pwd)
     friends = db.relationship('User')
-    macids = db.Column('macids', ARRAY(db.String(128)))
+    macids = db.relationship('MACIDs')
 
 class Reminder(Base):
     __tablename__ = 'reminders'
@@ -58,6 +66,11 @@ class Reminder(Base):
     reminderText = db.Column('message', db.Text)
     time = db.Column('time', db.DateTime, primary_key = True)
 
+def createDB():
+    DB_CONN_URI_DEFAULT = "./rendezvousdb.db"
+    conn = sqlite3.connect(DB_CONN_URI_DEFAULT)
+    engine = create_engine("sqlite:///" + DB_CONN_URI_DEFAULT)
+    Base.metadata.create_all(engine)
 
 
 
