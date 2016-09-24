@@ -5,7 +5,7 @@ Routes and views for the flask application.
 from datetime import datetime
 from flask import render_template
 from FlaskWebProject import app
-from . import createDB, User, engine, MACIDs
+from . import createDB, User, engine, MACIDs, Password, APIKey, Reminder
 from passlib.hash import md5_crypt
 from sqlalchemy.orm import sessionmaker
 
@@ -16,16 +16,19 @@ def create():
     return createDB()
 
 #returns api key based on hash of current datetime
-@app.route('/authenticate', methods=['GET'])
+@app.route('/authenticate', methods=['POST','GET'])
 def authenticate(username, password):
     session = Session()
     s = session.query(User).get(username)
     if s.password == password:
-        return json.dumps(md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y')))
+        apiKey = md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y'))
+        session.add(APIKey(apikey = apiKey))
+        session.commit()
+        return json.dumps(apiKey)
     return json.dumps(False)
 
 
-@app.route('/addDevice', methods=['GET'])
+@app.route('/addDevice', methods=['POST','GET'])
 def addDevice(username, newMacID):
     session = Session()
     s = session.query(User).get(username)
@@ -40,7 +43,7 @@ def addDevice(username, newMacID):
 #friend is gonna be a User object with all its attribuets (columns)
 #return json of the friends database belonging to this current user.
 
-@app.route('/addFriend', methods=['GET'])]
+@app.route('/addFriend', methods=['POST','GET'])]
 def addFriend(username, friendname):
     session = Session()
     s = session.query(User).get(username)
@@ -58,7 +61,7 @@ def addFriend(username, friendname):
 #username1 is name of guy who initiates friend request
 #username 2 is name of person receiving friend request
 #message is string, which is the message user1 sends to user 2
-@app.route('/addReminder', methods=['GET'])
+@app.route('/addReminder', methods=['POST','GET'])
 def addReminder(username1, username2, message):
     session = Session()
     s1 = session.query(User).get(username1)
