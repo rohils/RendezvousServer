@@ -159,3 +159,12 @@ def changePassword(username, oldPassword, newPassword):
     s.password = newPassword
     session.commit()
     return json.dumps({"success":True})
+
+@app.route('/userExists', methods=['POST','GET'])
+def userExists(userQuery, username, apiKey):
+    session = Session()
+    s = session.query(Users).get(userQuery).all()
+    if apiKey not in session.query(APIKey).filter(user_id == s.id).all():
+        session.close()
+        return json.dumps({"success":False})
+    else: return json.dumps({"success":True if s else False})
