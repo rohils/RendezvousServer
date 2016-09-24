@@ -11,7 +11,6 @@ from sqlalchemy import create_engine
 import sqlite3
 import pickle
 from PasswordHash import PasswordHash
-from sqlalchemy.types as types
 
 
 Base = declarative_base()
@@ -71,10 +70,10 @@ class MACIDs(Base):
 class User(Base):
     __tablename__ = 'users'
     uname = db.Column('uname', db.String(80), primary_key = True)
-    pswd = db.Column('pswd', Password)
-    @validates('pswd')
+    pswd = db.Column('pswd', db.Text)
+    '''@validates('pswd')
     def _validate_password(self, key, pwd):
-        return getattr(type(self), key).type.validator(pwd)
+        return getattr(type(self), key).type.validator(pwd)'''
     friends = db.Column('friends', db.Text)
     macids = db.relationship('MACIDs')
     apikeys = db.relationship('APIKey')

@@ -9,6 +9,7 @@ from . import createDB, User, engine, MACIDs, Password, APIKey, Reminder, db
 from passlib.hash import md5_crypt
 from sqlalchemy.orm import sessionmaker
 import pickle
+from PasswordHash import PasswordHash
 
 Session = sessionmaker(bind=engine)
 
@@ -24,7 +25,9 @@ def register(username, password):
     s = session.query(User).get(username)
     session.flush()
     if not(s):
-        session.add(User(uname = username, pswd = password, friends = ''))
+        print(username)
+        print(password)
+        session.add(User(uname = username, pswd = PasswordHash.new(password).hash, friends = ''))
         session.flush()
         session.close()
         return({"success":True})
