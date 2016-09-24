@@ -16,9 +16,9 @@ def create():
     createDB()
     return "True"
 
-#assumes database is named Users
+#returns api key based on hash of current datetime
 @app.route('/authenticate', methods=['POST'])
-def authenticate(id):
+def authenticate():
     return json.dumps(md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y')))
 
 @app.route('/addDevice', methods=['POST'])
@@ -31,7 +31,31 @@ def addDevice(username, newMacID):
     session.commit()
 
 
-"""def addFriend(username):
-    s = Users.query.get(username)
-    #friends = s.
-    #i think we need a friends class in init to hold another table."""
+#username is the name of current user
+#friend is gonna be a User object with all its attribuets (columns)
+#return json of the friends database belonging to this current user.
+@app.route('/addFriend', methods=['POST'])
+def addFriend(username, friendname):
+    s = session.query(User).get(username)
+    f = session.query(User).get(friendname)
+    #dont know if below line works like this.
+    s.friends.append(f)
+    session.commit()
+    return json.dumps(s.friends)
+
+
+#username1 is name of guy who initiates friend request
+#username 2 is name of person receiving friend request
+#message is string, which is the message user1 sends to user 2
+@app.route('/addReminder', methods=['POST'])
+def addReminder(username1, username2, message):
+    s1 = session.query(User).get(username1)
+    s2 = session.query(User).get(username2)
+    newReminder = Reminder(id=md5_crypt.encrypt(username1+username2), userTrigger=s1,
+        userReceiver=s2, reminderText=message, time=datetime.utcnow())
+    session.add(newReminder)
+    session.commit()
+    return json.dumps(reminders)
+
+
+    
