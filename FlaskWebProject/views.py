@@ -146,6 +146,7 @@ def friendList(username, apiKey):
         session.close()
         return json.dumps({"success":False})
     fnames = s.friends.split(',')
+    session.close()
     return json.dumps({"users":fnames, "success":True})
 
 @app.route('/reminderList/<username>/<path:apiKey>/', methods=['POST','GET'])
