@@ -114,6 +114,7 @@ def addFriend(username, apiKey, friendName):
 #message is string, which is the message user1 sends to user 2
 @app.route('/addReminder/<path:apiKey>/<userReceiver>/<userTrigger>/<message>/', methods=['POST','GET'])
 def addReminder(apiKey, userReceiver, userTrigger, message):
+    message.replace("_", " ")
     session = Session()
     s1 = session.query(User).get(userReceiver)
     if not(s1):
