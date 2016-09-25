@@ -101,8 +101,8 @@ def addFriend(username, apiKey, friendName):
 #username1 is name of guy who initiates friend request
 #username 2 is name of person receiving friend request
 #message is string, which is the message user1 sends to user 2
-@app.route('/addReminder/<path:apiKey>/<userReceiver>/<userTrigger>/<message>/<time>/', methods=['POST','GET'])
-def addReminder(apiKey, userReceiver, userTrigger, message, time):
+@app.route('/addReminder/<path:apiKey>/<userReceiver>/<userTrigger>/<message>/', methods=['POST','GET'])
+def addReminder(apiKey, userReceiver, userTrigger, message):
     session = Session()
     s1 = session.query(User).get(userReceiver)
     if not(s1):
@@ -115,7 +115,7 @@ def addReminder(apiKey, userReceiver, userTrigger, message, time):
     if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == s1.uname).all()]:
         session.close()
         return json.dumps({"success":False})
-    newReminder = Reminder(userTrigger=userTrigger, userReceiver=userReceiver, reminderText=message, time=time)
+    newReminder = Reminder(userTrigger=userTrigger, userReceiver=userReceiver, reminderText=message, time=0)
     session.add(newReminder)
     session.commit()
     session.close()
