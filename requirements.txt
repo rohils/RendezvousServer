@@ -3,4 +3,3 @@ SQLAlchemy==1.0.15
 Flask-SQLAlchemy==2.1
 passlib==1.6.5
 sqlalchemy-utils==0.32.9
-psycopg2==2.6.2

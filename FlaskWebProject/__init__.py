@@ -100,6 +100,11 @@ class Reminder(Base):
     def __repr__(self):
         return '<Reminder>'
 
+class Friends(Base):
+    __tablename__ = 'friends'
+    id = 
+    name = db.column('name', db.String(80))
+
 DB_CONN_URI_DEFAULT = "./rendezvousdb.db"
 conn = sqlite3.connect(DB_CONN_URI_DEFAULT)
 engine = create_engine("sqlite:///" + DB_CONN_URI_DEFAULT)

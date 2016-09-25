@@ -179,7 +179,7 @@ def changePassword(username, oldPassword, newPassword):
     op = s.pswd
     try:
         if s and md5_crypt.verify(oldPassword, op):
-            s.pswd = newPassword
+            s.pswd = md5_crypt.encrypt(newPassword)
             session.commit()
             session.close()
             return json.dumps({"success":True})
