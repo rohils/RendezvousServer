@@ -10,8 +10,6 @@ import sqlite3
 import hashlib
 import uuid
 from sqlalchemy.orm import sessionmaker
-import pickle
-from PasswordHash import PasswordHash
 import json
 
 def hash_api(text):
