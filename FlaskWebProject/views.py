@@ -182,7 +182,7 @@ def processIds(idList, username, apiKey):
         else:
             answerList.append(m.name)
     session.close()
-    return json.dumps({"userList":answerList,"success":True})
+    return json.dumps({"users":answerList,"success":True})
 
 @app.route('/changePassword/<username>/<oldPassword>/<newPassword>/', methods=['POST','GET'])
 def changePassword(username, oldPassword, newPassword):
