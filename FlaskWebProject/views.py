@@ -7,11 +7,24 @@ from flask import render_template
 from FlaskWebProject import app
 from . import createDB, User, engine, MACIDs, Password, APIKey, Reminder, db
 import sqlite3
-from passlib.hash import md5_crypt
+import hashlib
+import uuid
 from sqlalchemy.orm import sessionmaker
 import pickle
 from PasswordHash import PasswordHash
 import json
+
+def hash_api(text):
+    salt = uuid.uuid4().hex
+    return hashlib.md5(salt.encode() + text.encode()).hexdigest()
+
+def hash_text(text):
+    salt = uuid.uuid4().hex
+    return hashlib.md5(salt.encode() + text.encode()).hexdigest() + ":" + salt
+
+def check_hash(hashed_text, input_text):
+    text, salt = hashed_text.split(':')
+    return text == hashlib.md5(salt.encode() + input_text.encode()).hexdigest()
 
 Session = sessionmaker(bind = engine)
 
@@ -27,7 +40,7 @@ def register(username, password):
     s = session.query(User).get(username)
     session.flush()
     if not(s):
-        new = User(uname = username, pswd = PasswordHash.new(password).hash, friends = '')
+        new = User(uname = username, pswd = hash_text(password), friends = '')
         session.add(new)
         session.commit()
         session.close()
@@ -43,9 +56,8 @@ def authenticate(username, password):
     s = session.query(User).get(username)
     if not(s):
         return json.dumps({"success":False})
-    print(md5_crypt.verify(password, s.pswd))
-    if md5_crypt.verify(password, s.pswd):
-        apiKey = md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y'))
+    if check_hash(s.pswd, password):
+        apiKey = hash_api(datetime.utcnow().strftime('%m/%d/%Y'))
         session.add(APIKey(apikey = apiKey, name = s.uname))
         session.commit()
         session.close()
@@ -180,8 +192,8 @@ def changePassword(username, oldPassword, newPassword):
     s = session.query(User).get(username)
     op = s.pswd
     try:
-        if s and md5_crypt.verify(oldPassword, op):
-            s.pswd = md5_crypt.encrypt(newPassword)
+        if s and check_hash(op, oldPassword):
+            s.pswd = hash_text(newPassword)
             session.commit()
             session.close()
             return json.dumps({"success":True})
