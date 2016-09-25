@@ -38,7 +38,6 @@ def create():
 def register(username, password):
     session = Session()
     s = session.query(User).get(username)
-    session.flush()
     if not(s):
         new = User(uname = username, pswd = hash_text(password), friends = '')
         session.add(new)

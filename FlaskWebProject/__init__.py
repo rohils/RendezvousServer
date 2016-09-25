@@ -86,8 +86,9 @@ class User(Base):
 
 class Reminder(Base):
     __tablename__ = 'reminders'
+    id = db.Column('id', db.Integer, primary_key = True)
     userTrigger = db.Column('utrigger', db.String(80))
-    userReceiver = db.Column('ureceiver', db.String(80), primary_key = True)
+    userReceiver = db.Column('ureceiver', db.String(80))
     reminderText = db.Column('message', db.Text)
     time = db.Column('datetime', db.Integer)
 
