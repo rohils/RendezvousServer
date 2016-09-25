@@ -41,6 +41,8 @@ def register(username, password):
 def authenticate(username, password):
     session = Session()
     s = session.query(User).get(username)
+    if not(s):
+        return json.dumps({"success":False})
     print(md5_crypt.verify(password, s.pswd))
     if md5_crypt.verify(password, s.pswd):
         apiKey = md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y'))
