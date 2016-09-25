@@ -156,7 +156,7 @@ def reminderList(username, apiKey):
     session.commit()
     rs = []
     for reminders in r:
-        rs.append([reminders.userReceiver, reminders.userTrigger, reminders.reminderText, reminders.time])
+        rs.append([reminders.id, reminders.userReceiver, reminders.userTrigger, reminders.reminderText, reminders.time])
     if not(s):
         session.close()
         return json.dumps({"success":False})
@@ -218,3 +218,22 @@ def userExists(userQuery, username, apiKey):
     else:
         session.close()
         return json.dumps({"success":True if s else False})
+
+@app.route('/setReminderTime/<username>/<path:apiKey>/<id>/<time>', methods=['POST','GET'])
+def setReminderTime(username, apiKey, id, time):
+    session = Session()
+    s = session.query(User).get(username)
+    if not(s):
+        session.close()
+        return json.dumps({"success":False})
+    if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == s.uname).all()]:
+        session.close()
+        return json.dumps({"success":False})
+    r = session.query(Reminder).get(id)
+    if not(r):
+        session.close()
+        return json.dumps({"success":False})
+    r.time = time
+    session.commit()
+    session.close()
+    return json.dumps({"success":True})
