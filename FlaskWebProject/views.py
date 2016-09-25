@@ -6,12 +6,14 @@ from datetime import datetime
 from flask import render_template
 from FlaskWebProject import app
 from . import createDB, User, engine, MACIDs, Password, APIKey, Reminder, db
+import sqlite3
 from passlib.hash import md5_crypt
 from sqlalchemy.orm import sessionmaker
 import pickle
 from PasswordHash import PasswordHash
+import json
 
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind = engine)
 
 @app.route('/create')
 def create():
@@ -25,42 +27,42 @@ def register(username, password):
     s = session.query(User).get(username)
     session.flush()
     if not(s):
-        print(username)
-        print(password)
-        session.add(User(uname = username, pswd = PasswordHash.new(password).hash, friends = ''))
-        session.flush()
+        new = User(uname = username, pswd = PasswordHash.new(password).hash, friends = '')
+        session.add(new)
+        session.commit()
         session.close()
-        return({"success":True})
+        return json.dumps({"success":True})
     else:
-        return({"success":False})
+        return json.dumps({"success":False})
 
 
 #returns api key based on hash of current datetime
-@app.route('/authenticate/<username>/<password>', methods=['POST','GET'])
+@app.route('/authenticate/<username>/<password>/', methods=['GET','POST'])
 def authenticate(username, password):
     session = Session()
     s = session.query(User).get(username)
-    if s.password == password:
+    print(md5_crypt.verify(password, s.pswd))
+    if md5_crypt.verify(password, s.pswd):
         apiKey = md5_crypt.encrypt(datetime.utcnow().strftime('%m/%d/%Y'))
-        session.add(APIKey(apikey = apiKey))
-        session.flush()
+        session.add(APIKey(apikey = apiKey, name = s.uname))
+        session.commit()
         session.close()
         return json.dumps({"success":True, "apiKey":apiKey})
     return json.dumps({"success":False})
 
 
-@app.route('/addDevice/<username>/<apiKey>/<newMacID>', methods=['POST','GET'])
+@app.route('/addDevice/<username>/<path:apiKey>/<newMacID>/', methods=['POST','GET'])
 def addDevice(username, apiKey, newMacID):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
+    if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == s.uname).all()]:
         session.close()
         return json.dumps({"success":False})
-    s.macids.append(MACIDs(macid = newMacID))
-    session.flush()
+    s.macids.append(MACIDs(macid = newMacID, name = s.uname))
+    session.commit()
     session.close()
     return json.dumps({"success":True})
 
@@ -69,7 +71,7 @@ def addDevice(username, apiKey, newMacID):
 #friend is gonna be a User object with all its attribuets (columns)
 #return json of the friends database belonging to this current user.
 
-@app.route('/addFriend/<username>/<apiKey>/<friendName>', methods=['POST','GET'])
+@app.route('/addFriend/<username>/<path:apiKey>/<friendName>/', methods=['POST','GET'])
 def addFriend(username, apiKey, friendName):
     session = Session()
     s = session.query(User).get(username)
@@ -80,12 +82,18 @@ def addFriend(username, apiKey, friendName):
     if not(f):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
+    if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == s.uname).all()]:
         session.close()
         return json.dumps({"success":False})
-    #dont know if below line works like this.
-    pickle.dumps(pickle.loads(s.friends).append(s.uname))
-    session.flush()
+    if s.friends == "":
+        s.friends = friendName
+    else:
+        fnames = s.friends.split(',')
+        if friendName in fnames:
+            session.close()
+            return json.dumps({"success":False})
+        s.friends = s.friends + "," + friendName
+    session.commit()
     session.close()
     return json.dumps({"success":True})
 
@@ -93,7 +101,7 @@ def addFriend(username, apiKey, friendName):
 #username1 is name of guy who initiates friend request
 #username 2 is name of person receiving friend request
 #message is string, which is the message user1 sends to user 2
-@app.route('/addReminder/<apiKey>/<userReceiver>/<userTrigger>/<message>/<time>', methods=['POST','GET'])
+@app.route('/addReminder/<path:apiKey>/<userReceiver>/<userTrigger>/<message>/<time>/', methods=['POST','GET'])
 def addReminder(apiKey, userReceiver, userTrigger, message, time):
     session = Session()
     s1 = session.query(User).get(userReceiver)
@@ -104,72 +112,95 @@ def addReminder(apiKey, userReceiver, userTrigger, message, time):
     if not(s2):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(uname == s1.uname).all():
+    if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == s1.uname).all()]:
         session.close()
         return json.dumps({"success":False})
-    newReminder = Reminder(userTrigger=s2, userReceiver=s1, reminderText=message, time=time)
+    newReminder = Reminder(userTrigger=userTrigger, userReceiver=userReceiver, reminderText=message, time=time)
     session.add(newReminder)
-    session.flush()
+    session.commit()
     session.close()
     return json.dumps({"success":True})
 
-@app.route('/friendsList/<username>/<apiKey>', methods=['POST','GET'])
+@app.route('/friendsList/<username>/<path:apiKey>/', methods=['POST','GET'])
 def friendList(username, apiKey):
     session = Session()
     s = session.query(User).get(username)
     if not(s):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
+    if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == s.uname).all()]:
         session.close()
         return json.dumps({"success":False})
-    fnames = pickle.loads(s.friends)
-    session.close()
+    fnames = s.friends.split(',')
     return json.dumps({"users":fnames, "success":True})
 
-@app.route('/reminderList/<username>/<apiKey>', methods=['POST','GET'])
+@app.route('/reminderList/<username>/<path:apiKey>/', methods=['POST','GET'])
 def reminderList(username, apiKey):
     session = Session()
-    s = session.query(Reminder).filter(Reminder.userReceiver.username==username).all()
+    s = session.query(User).get(username)
+    r = session.query(Reminder).filter(Reminder.userReceiver==username).all()
+    session.commit()
+    rs = []
+    for reminders in r:
+        rs.append([reminders.userReceiver, reminders.userTrigger, reminders.reminderText, reminders.time])
     if not(s):
         session.close()
         return json.dumps({"success":False})
-    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
+    if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == s.uname).all()]:
         session.close()
         return json.dumps({"success":False})
     session.close()
-    return json.dumps({"reminders":s, "success":True})
+    return json.dumps({"reminders":rs, "success":True})
 
-@app.route('/processIds/<idList>/<username>/<apiKey>', methods=['POST','GET'])
-def processIds(idList, username, APIKey):
+@app.route('/processIds/<idList>/<username>/<path:apiKey>/', methods=['POST','GET'])
+def processIds(idList, username, apiKey):
     session = Session()
-    s = session.query(Reminder).filter(Reminder.userReceiver.uname==username).all()
-    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
+    s = session.query(User).get(username)
+    p = session.query(Reminder).filter(Reminder.userReceiver==username).all()
+    if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == username).all()]:
         session.close()
         return json.dumps({"success":False})
     answerList = []
-    for hash in idList:
-        m = session.query(MACIDS).get(hash).first().name
-        if not user: answerList.append("")
-        else: answerList.append(m)
+    ids = idList.split(',')
+    print(ids)
+    for hash in ids:
+        m = session.query(MACIDs).get(hash)
+        if not(m):
+            answerList.append("")
+        else:
+            answerList.append(m.name)
     session.close()
     return json.dumps({"userList":answerList,"success":True})
 
-@app.route('/changePassword/<username>/<oldPassword>/<newPassword>', methods=['POST','GET'])
+@app.route('/changePassword/<username>/<oldPassword>/<newPassword>/', methods=['POST','GET'])
 def changePassword(username, oldPassword, newPassword):
     session = Session()
-    s = session.query(User).get(oldPassword).first()
-    t = session.query(User).get(uname).first()
-    if not s or not t or not s == t: return json.dumps({"success":False})
-    s.password = newPassword
-    session.commit()
-    return json.dumps({"success":True})
-
-@app.route('/userExists/<userQuery>/<username>/<apiKey>', methods=['POST','GET'])
-def userExists(userQuery, username, apiKey):
-    session = Session()
-    s = session.query(User).get(userQuery).all()
-    if apiKey not in session.query(APIKey).filter(uname == s.uname).all():
+    s = session.query(User).get(username)
+    op = s.pswd
+    try:
+        if s and md5_crypt.verify(oldPassword, op):
+            s.pswd = newPassword
+            session.commit()
+            session.close()
+            return json.dumps({"success":True})
+        else:
+            session.close()
+            return json.dumps({"success":False})
+    except:
         session.close()
         return json.dumps({"success":False})
-    else: return json.dumps({"success":True if s else False})
+    session.close()
+    return json.dumps({"success":False})
+
+@app.route('/userExists/<userQuery>/<username>/<path:apiKey>/', methods=['POST','GET'])
+def userExists(userQuery, username, apiKey):
+    session = Session()
+    a = session.query(User).get(username)
+    s = session.query(User).get(userQuery)
+    session.commit()
+    if apiKey not in [str(i) for i in session.query(APIKey).filter(APIKey.name == a.uname).all()]:
+        session.close()
+        return json.dumps({"success":False})
+    else:
+        session.close()
+        return json.dumps({"success":True if s else False})

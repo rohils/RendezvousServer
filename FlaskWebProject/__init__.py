@@ -53,7 +53,7 @@ class APIKey(Base):
         self.name = name
 
     def __repr__(self):
-        return '<APIKey %r>' % self.apikey
+        return self.apikey
 
 class MACIDs(Base):
     __tablename__ = 'mac_ids'
@@ -71,9 +71,6 @@ class User(Base):
     __tablename__ = 'users'
     uname = db.Column('uname', db.String(80), primary_key = True)
     pswd = db.Column('pswd', db.Text)
-    '''@validates('pswd')
-    def _validate_password(self, key, pwd):
-        return getattr(type(self), key).type.validator(pwd)'''
     friends = db.Column('friends', db.Text)
     macids = db.relationship('MACIDs')
     apikeys = db.relationship('APIKey')
@@ -110,7 +107,6 @@ Base.metadata.create_all(engine)
 
 def createDB():
     DB_CONN_URI_DEFAULT = "./rendezvousdb.db"
-    conn = sqlite3.connect(DB_CONN_URI_DEFAULT)
     engine = create_engine("sqlite:///" + DB_CONN_URI_DEFAULT)
     Base.metadata.create_all(engine)
 
