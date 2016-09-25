@@ -135,7 +135,7 @@ def addReminder(apiKey, userReceiver, userTrigger, message):
     session.close()
     return json.dumps({"success":True})
 
-@app.route('/friendsList/<username>/<path:apiKey>/', methods=['POST','GET'])
+@app.route('/friendList/<username>/<path:apiKey>/', methods=['POST','GET'])
 def friendList(username, apiKey):
     session = Session()
     s = session.query(User).get(username)
